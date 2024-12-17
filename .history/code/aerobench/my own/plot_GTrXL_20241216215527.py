@@ -97,4 +97,4 @@ def plot_fig(y_1,y_2,y_3):
     # 显示图表
     plt.show()
 if __name__=="__main__":
-    plot_fig(z_21,z_22,z_31)
+    plot_fig(z_21,z_22,z_32)

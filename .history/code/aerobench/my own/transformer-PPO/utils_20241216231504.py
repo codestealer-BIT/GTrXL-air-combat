@@ -116,12 +116,12 @@ class Module(nn.Module):
             grads.append(parameter.grad.view(-1))
         return torch.mean(torch.cat(grads)).item() if len(grads) > 0 else None
 def average(data):
-    averages=[]
-    for i in range(0, len(data), 10):
-    # 取出当前的十个元素
-        segment = data[i:i + 10]
-        # 计算当前段的平均值
-        segment_average = sum(segment) / len(segment)
-        # 将平均值添加到结果列表中
-        averages.append(segment_average)
-    return averages
+            averages=[]
+            for i in range(0, len(data), 10):
+            # 取出当前的十个元素
+                segment = data[i:i + 10]
+                # 计算当前段的平均值
+                segment_average = sum(segment) / len(segment)
+                # 将平均值添加到结果列表中
+                averages.append(segment_average)
+            return averages

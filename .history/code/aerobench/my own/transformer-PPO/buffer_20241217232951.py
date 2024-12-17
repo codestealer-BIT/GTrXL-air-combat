@@ -88,7 +88,7 @@ class Buffer():
                 if key == "memory_index":
                     # Add the correct episode memories to the concerned mini batch
                     mini_batch["memories"] = self.memories[value[mini_batch_indices]]#为什么索引是value，因为这里value是“memory_index”对应的值，也是一堆索引
-                    #memorys这个键在原self.samples_flat字典里没有，这里才有键值对产生的
+                    #memorys这个键在原self.samples_flat字典里没有
                 else:
                     mini_batch[key] = value[mini_batch_indices].to(self.device)
             yield mini_batch#minibatch是一个迭代器
@@ -105,7 +105,7 @@ class Buffer():
             last_advantage = 0
             mask = torch.tensor(self.dones).logical_not() # mask values on terminal states
             rewards = torch.tensor(self.rewards)
-            for t in reversed(range(self.worker_steps)):#这里有个t做时间步的标记，所以不要在结尾翻转
+            for t in reversed(range(self.worker_steps)):
                 last_value = last_value * mask[:, t]
                 last_advantage = last_advantage * mask[:, t]
                 delta = rewards[:, t] + gamma * last_value - self.values[:, t]

@@ -81,7 +81,6 @@ class PPOTrainer:
             self.obs[w] = worker.child.recv()
 
         # Setup placeholders for each worker's current episodic memory
-        #self.memory的结构和self.buffer.memory不一样，还待后续观察
         self.memory = torch.zeros((self.num_workers, self.max_episode_length, self.num_blocks, self.embed_dim), dtype=torch.float32)
         # Generate episodic memory mask used in attention
         self.memory_mask = torch.tril(torch.ones((self.memory_length, self.memory_length)), diagonal=-1)

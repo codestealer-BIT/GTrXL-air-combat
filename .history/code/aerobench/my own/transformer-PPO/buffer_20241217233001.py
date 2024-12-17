@@ -105,7 +105,7 @@ class Buffer():
             last_advantage = 0
             mask = torch.tensor(self.dones).logical_not() # mask values on terminal states
             rewards = torch.tensor(self.rewards)
-            for t in reversed(range(self.worker_steps)):#这里有个t做时间步的标记，所以不要在结尾翻转
+            for t in reversed(range(self.worker_steps)):
                 last_value = last_value * mask[:, t]
                 last_advantage = last_advantage * mask[:, t]
                 delta = rewards[:, t] + gamma * last_value - self.values[:, t]

@@ -7,7 +7,7 @@ import torch
 from collections import deque
 from torch import optim
 from torch.utils.tensorboard import SummaryWriter
-from sklearn.preprocessing import MinMaxScaler
+
 from buffer import Buffer
 from model import ActorCriticModel
 from utils import batched_index_select, create_env, polynomial_decay, process_episode_info,average
@@ -68,7 +68,7 @@ class PPOTrainer:
 
         # Init workers
         print("Step 4: Init environment workers")
-        self.workers = [Worker(self.config["environment"]) for w in range(self.num_workers)]#这里才是环境的初始化
+        self.workers = [Worker(self.config["environment"]) for w in range(self.num_workers)]
         self.worker_ids = range(self.num_workers)
         self.worker_current_episode_step = torch.zeros((self.num_workers, ), dtype=torch.long)
         # Reset workers (i.e. environments)
@@ -81,7 +81,6 @@ class PPOTrainer:
             self.obs[w] = worker.child.recv()
 
         # Setup placeholders for each worker's current episodic memory
-        #self.memory的结构和self.buffer.memory不一样，还待后续观察
         self.memory = torch.zeros((self.num_workers, self.max_episode_length, self.num_blocks, self.embed_dim), dtype=torch.float32)
         # Generate episodic memory mask used in attention
         self.memory_mask = torch.tril(torch.ones((self.memory_length, self.memory_length)), diagonal=-1)
@@ -149,7 +148,7 @@ class PPOTrainer:
             print(result)
         #这一段得放到writer_summary的前面，不然输出顺序是乱的
         success_numeric = [1 if entry['success'] else 0 for entry in episode_infos]
-        rewards=[entry["reward"] for entry in episode_infos]
+        rewards=[entry["reward"] for entry in episode_infos ]
         print(average(success_numeric),'\n')
         print(average(rewards))
         # for w, worker in enumerate(self.workers):
@@ -219,7 +218,6 @@ class PPOTrainer:
             # Retrieve step results from the environments
             for w, worker in enumerate(self.workers):
                 obs, self.buffer.rewards[w, t], self.buffer.dones[w, t],info,res, init_extra, skip_override = worker.child.recv()
-                obs=MinMaxScaler().fit_transform(np.array(obs).reshape(-1,1)).reshape(-1)
                 m_state.append(res['final_state'])#只是为了衔接动作
                 #将一次成功的追逃经历记录下来，便于可视化
                 if  w==0 and self.flag==True and update==13:
@@ -261,7 +259,6 @@ class PPOTrainer:
                     worker.child.send(("reset", None,None,None))
                     # Get data from reset
                     obs = worker.child.recv()
-                    obs=MinMaxScaler().fit_transform(np.array(obs).reshape(-1,1)).reshape(-1)
                     # Break the reference to the worker's memory
                     mem_index = self.buffer.memory_index[w, t]
                     self.buffer.memories[mem_index] = self.buffer.memories[mem_index].clone()

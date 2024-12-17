@@ -7,10 +7,10 @@ import torch
 from collections import deque
 from torch import optim
 from torch.utils.tensorboard import SummaryWriter
-from sklearn.preprocessing import MinMaxScaler
+
 from buffer import Buffer
 from model import ActorCriticModel
-from utils import batched_index_select, create_env, polynomial_decay, process_episode_info,average
+from utils import batched_index_select, create_env, polynomial_decay, process_episode_info
 from worker import Worker
 from aerobench.visualize import anim3d, plot
 from plot import plot
@@ -64,11 +64,11 @@ class PPOTrainer:
         print("Step 3: Init model and optimizer")
         self.model = ActorCriticModel(self.config, observation_space, self.action_space_shape, self.max_episode_length).to(self.device)
         self.model.train()
-        self.optimizer = optim.AdamW(self.model.parameters(), lr=self.lr_schedule["initial"])#model里的参数一起更新
+        self.optimizer = optim.AdamW(self.model.parameters(), lr=self.lr_schedule["initial"])
 
         # Init workers
         print("Step 4: Init environment workers")
-        self.workers = [Worker(self.config["environment"]) for w in range(self.num_workers)]#这里才是环境的初始化
+        self.workers = [Worker(self.config["environment"]) for w in range(self.num_workers)]
         self.worker_ids = range(self.num_workers)
         self.worker_current_episode_step = torch.zeros((self.num_workers, ), dtype=torch.long)
         # Reset workers (i.e. environments)
@@ -81,7 +81,6 @@ class PPOTrainer:
             self.obs[w] = worker.child.recv()
 
         # Setup placeholders for each worker's current episodic memory
-        #self.memory的结构和self.buffer.memory不一样，还待后续观察
         self.memory = torch.zeros((self.num_workers, self.max_episode_length, self.num_blocks, self.embed_dim), dtype=torch.float32)
         # Generate episodic memory mask used in attention
         self.memory_mask = torch.tril(torch.ones((self.memory_length, self.memory_length)), diagonal=-1)
@@ -110,7 +109,7 @@ class PPOTrainer:
         """Runs the entire training logic from sampling data to optimizing the model. Only the final model is saved."""
         print("Step 6: Starting training using " + str(self.device))
         # Store episode results for monitoring statistics
-        episode_infos = []#会把老元素挤出去
+        episode_infos = deque(maxlen=10)#会把老元素挤出去
 
         for update in range(self.config["updates"]):#200轮
             # Decay hyperparameters polynomially based on the provided config
@@ -134,9 +133,9 @@ class PPOTrainer:
 
             # Print training statistics
             success_count = sum(1 for info in sampled_episode_info if info.get("success") == True)
-            returns=np.mean([info['reward'] for info in sampled_episode_info])
-            result = "{:4} return={:.2f} std={:.2f} length_update={:.1f} length={:.1f} std={:.2f} win_num_update={:.1f} win_rate={:.2f}% pi_loss={:3f} v_loss={:3f} entropy={:.3f} loss={:3f} value={:.3f} advantage={:.3f}".format(
-                    update,returns, episode_result["reward_std"], len(sampled_episode_info),episode_result["length_mean"], episode_result["length_std"],success_count,episode_result["success_percent"]*100,
+            returns=np.mean([info[''] for ])
+            result = "{:4} reward={:.2f} std={:.2f} length_update={:.1f} length={:.1f} std={:.2f} win_num_update={:.1f} win_rate={:.2f}% pi_loss={:3f} v_loss={:3f} entropy={:.3f} loss={:3f} value={:.3f} advantage={:.3f}".format(
+                    update, episode_result["reward_mean"], episode_result["reward_std"], len(sampled_episode_info),episode_result["length_mean"], episode_result["length_std"],success_count,episode_result["success_percent"]*100,
                     training_stats[0], training_stats[1], training_stats[3], training_stats[2], torch.mean(self.buffer.values), torch.mean(self.buffer.advantages))
             # if "success" in episode_result:
             #     result = "{:4} reward={:.2f} std={:.2f} length={:.1f} std={:.2f} success={:.2f} pi_loss={:3f} v_loss={:3f} entropy={:.3f} loss={:3f} value={:.3f} advantage={:.3f}".format(
@@ -149,7 +148,17 @@ class PPOTrainer:
             print(result)
         #这一段得放到writer_summary的前面，不然输出顺序是乱的
         success_numeric = [1 if entry['success'] else 0 for entry in episode_infos]
-        rewards=[entry["reward"] for entry in episode_infos]
+        rewards=[entry["reward"] for entry in episode_infos ]
+        def average(data):
+            averages=[]
+            for i in range(0, len(data), 10):
+            # 取出当前的十个元素
+                segment = data[i:i + 10]
+                # 计算当前段的平均值
+                segment_average = sum(segment) / len(segment)
+                # 将平均值添加到结果列表中
+                averages.append(segment_average)
+            return averages
         print(average(success_numeric),'\n')
         print(average(rewards))
         # for w, worker in enumerate(self.workers):
@@ -219,7 +228,6 @@ class PPOTrainer:
             # Retrieve step results from the environments
             for w, worker in enumerate(self.workers):
                 obs, self.buffer.rewards[w, t], self.buffer.dones[w, t],info,res, init_extra, skip_override = worker.child.recv()
-                obs=MinMaxScaler().fit_transform(np.array(obs).reshape(-1,1)).reshape(-1)
                 m_state.append(res['final_state'])#只是为了衔接动作
                 #将一次成功的追逃经历记录下来，便于可视化
                 if  w==0 and self.flag==True and update==13:
@@ -261,7 +269,6 @@ class PPOTrainer:
                     worker.child.send(("reset", None,None,None))
                     # Get data from reset
                     obs = worker.child.recv()
-                    obs=MinMaxScaler().fit_transform(np.array(obs).reshape(-1,1)).reshape(-1)
                     # Break the reference to the worker's memory
                     mem_index = self.buffer.memory_index[w, t]
                     self.buffer.memories[mem_index] = self.buffer.memories[mem_index].clone()

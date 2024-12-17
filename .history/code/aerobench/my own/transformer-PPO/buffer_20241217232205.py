@@ -77,21 +77,20 @@ class Buffer():
             {dict} -- Mini batch data for training
         """
         # Prepare indices (shuffle)
-        indices = torch.randperm(self.batch_size)#随机打乱，使样本保持独立同分布
+        indices = torch.randperm(self.batch_size)#随机打乱
         mini_batch_size = self.batch_size // self.n_mini_batches
         for start in range(0, self.batch_size, mini_batch_size):
             # Compose mini batches
             end = start + mini_batch_size
             mini_batch_indices = indices[start: end]
             mini_batch = {}
-            for key, value in self.samples_flat.items():#samples_flat已经被展平
+            for key, value in self.samples_flat.items():
                 if key == "memory_index":
                     # Add the correct episode memories to the concerned mini batch
                     mini_batch["memories"] = self.memories[value[mini_batch_indices]]#为什么索引是value，因为这里value是“memory_index”对应的值，也是一堆索引
-                    #memorys这个键在原self.samples_flat字典里没有，这里才有键值对产生的
                 else:
                     mini_batch[key] = value[mini_batch_indices].to(self.device)
-            yield mini_batch#minibatch是一个迭代器
+            yield mini_batch
 
     def calc_advantages(self, last_value:torch.tensor, gamma:float, lamda:float) -> None:
         """Generalized advantage estimation (GAE)
@@ -105,7 +104,7 @@ class Buffer():
             last_advantage = 0
             mask = torch.tensor(self.dones).logical_not() # mask values on terminal states
             rewards = torch.tensor(self.rewards)
-            for t in reversed(range(self.worker_steps)):#这里有个t做时间步的标记，所以不要在结尾翻转
+            for t in reversed(range(self.worker_steps)):
                 last_value = last_value * mask[:, t]
                 last_advantage = last_advantage * mask[:, t]
                 delta = rewards[:, t] + gamma * last_value - self.values[:, t]
