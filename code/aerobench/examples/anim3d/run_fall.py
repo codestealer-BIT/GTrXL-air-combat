@@ -39,26 +39,5 @@ def fall_simulate(filename, state,m_state):
 
     #print(f"Waypoint simulation completed in {round(res['runtime'], 2)} seconds (extended_states={extended_states})")
 
-    if filename.endswith('.mp4'):
-        skip_override = 4
-    elif filename.endswith('.gif'):
-        skip_override = 15
-    else:
-        skip_override = 15
 
-    anim_lines = []
-    modes = res['modes']
-    modes = modes[0::skip_override]
-
-    def init_extra(ax):
-        """initialize plot extra shapes"""
-
-        l1, = ax.plot([], [], [], 'bo', ms=8, lw=0, zorder=50)
-        anim_lines.append(l1)
-
-        l2, = ax.plot([], [], [], 'lime', marker='o', ms=8, lw=0, zorder=50)
-        anim_lines.append(l2)
-
-        return anim_lines
-
-    return res, None, skip_override, waypoints
+    return res
