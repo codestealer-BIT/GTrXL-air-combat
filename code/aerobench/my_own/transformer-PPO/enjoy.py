@@ -51,7 +51,7 @@ def main():
     env = F_16env_trxl(episodes=50000,filename='')
 
     # Initialize model and load its parameters
-    model = ActorCriticModel(config, env.observation_space, (env.action_space.n,), env.max_count)
+    model = ActorCriticModel(config, env.observation_space, (env.action_space.n,), env.max_episode_steps)
     model.load_state_dict(state_dict)
     model.to(device)
     model.eval()
@@ -83,7 +83,7 @@ def main():
         for action_branch in policy:
             action.append(action_branch.sample().item())
         # Step environemnt
-        obs, reward, done, info,res = env.step(action,None if t==0 else m_state,t)
+        obs, reward, done, info,res = env.step(action[-1],None if t==0 else m_state,t)#action是一个列表，输入应该是一个数
         m_state=res["final_state"]
         episode_rewards.append(reward)
         t += 1

@@ -226,36 +226,6 @@ class PPOTrainer:
             for w, worker in enumerate(self.workers):
                 obs, self.buffer.rewards[w, t], self.buffer.dones[w, t],info,res = worker.child.recv()
                 m_state.append(res['final_state'])#只是为了衔接动作
-                #将一次成功的追逃经历记录下来，便于可视化
-                if  w==0 and self.flag==True and update==13:
-                # if w==6 and update==0:
-                    #print()
-                    self.accumulated_res['status'] = res['status']
-                    self.accumulated_res['times'].extend(res['times'])
-                    self.accumulated_res['states'].append(res['states'])
-                    self.accumulated_res['missile'].append(res['missile'])
-                    self.accumulated_res['modes'].extend(res['modes'])
-                    self.accumulated_res['final_state'].append(res['final_state'])
-                    if 'xd_list' in res:
-                        self.accumulated_res['xd_list'].extend(res['xd_list'])
-                        self.accumulated_res['ps_list'].extend(res['ps_list'])
-                        self.accumulated_res['Nz_list'].extend(res['Nz_list'])
-                        self.accumulated_res['Ny_r_list'].extend(res['Ny_r_list'])
-                        self.accumulated_res['u_list'].extend(res['u_list'])
-                    self.accumulated_res['runtime'].append(res['runtime'])
-                    if info:
-                        if info["success"]==True:
-                            self.flag=False
-                        else:
-                                self.accumulated_res = {
-                                'status': [], 'times': [], 'states': [], 'modes': [],'missile':[],'final_state':[],
-                                'xd_list': [], 'ps_list': [], 'Nz_list': [], 'Ny_r_list': [], 'u_list': [], 'runtime': []
-                                }
-                    elif t==self.config["worker_steps"]-1:
-                        self.accumulated_res = {
-                            'status': [], 'times': [], 'states': [], 'modes': [],'missile':[],'final_state':[],
-                            'xd_list': [], 'ps_list': [], 'Nz_list': [], 'Ny_r_list': [], 'u_list': [], 'runtime': []
-                            }
                 if info: # i.e. done
                     # Reset the worker's current timestep
                     m_state[w]=None
@@ -281,14 +251,6 @@ class PPOTrainer:
                     self.worker_current_episode_step[w] +=1
                 # Store latest observations
                 self.obs[w] = obs
-        skip_override=15#3
-        # if len(self.accumulated_res['states'])!=0 and self.flag_1:
-        #     self.accumulated_res['states'] = np.vstack(self.accumulated_res['states'])
-        #     self.accumulated_res['missile'] = np.vstack(self.accumulated_res['missile'])
-        #     anim3d.make_anim(self.accumulated_res, self.filename, f16_scale=70, viewsize=60000, viewsize_z=4000, trail_pts=np.inf,
-        #                 elev=27, azim=-107, skip_frames=skip_override,
-        #                 chase=True, fixed_floor=False, init_extra=init_extra)
-        #     self.flag_1=False
         for w, _ in enumerate(self.workers):#重置step，为了m_state正确传入
             self.worker_current_episode_step[w]=0
             worker.child.send(("reset", None,None,None))

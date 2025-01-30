@@ -42,7 +42,7 @@ class F_16env_trxl(gym.Env):
         self.list=[[] for _ in range(episodes)]
         self.success=0
         self.max_count=100
-        self.max_episode_steps = 200
+        self.max_episode_steps = 200#要比回合步数大
         self.lock = multiprocessing.Lock()
     @property
     def observation_space(self):
