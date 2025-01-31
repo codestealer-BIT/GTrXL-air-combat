@@ -16,6 +16,7 @@ from aerobench.examples.anim3d.run_rise import rise_simulate
 from aerobench.examples.anim3d.run_straight import straight_simulate
 from aerobench.examples.anim3d.run_right_turn import right_turn_simulate
 from aerobench.examples.anim3d.run_left_turn import left_turn_simulate
+from aerobench.examples.anim3d.missile import missile
 simulation_functions = [
         fall_simulate,
         left_turn_simulate,
@@ -37,6 +38,7 @@ class F_16env_trxl(gym.Env):
         self.distance=0
         # state = [vt, alpha, beta, phi, theta, psi, P, Q, R, pn, pe, h, pow]
         self.init_state=[250,0,0,0,0,np.pi/2,0,0,0,3000,3000,3000,9]
+        self.m_init_state=missile().m_state#只是为了读导弹的初始信息，方便reset
         self.low=np.array([0,0,0],dtype=np.float32)
         self.high=np.array([np.inf,np.inf,np.inf],dtype=np.float32)
         self.list=[[] for _ in range(episodes)]
@@ -138,6 +140,6 @@ class F_16env_trxl(gym.Env):
     
     def reset(self):
         #[x,y,z,psi,theta,x_m,y_m,z_m,psi_m,theta_m]
-        obs=[self.init_state[10],self.init_state[9],self.init_state[11],np.pi,0,0,0,0,np.deg2rad(135),0]
+        obs=[self.init_state[10],self.init_state[9],self.init_state[11],self.init_state[5],self.init_state[4],self.m_init_state[0],self.m_init_state[1],self.m_init_state[2],self.m_init_state[4],self.m_init_state[5]]
         obs=MinMaxScaler().fit_transform(np.array(obs).reshape(-1,1)).reshape(-1)
         return obs 
