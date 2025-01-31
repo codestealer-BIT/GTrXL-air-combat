@@ -43,10 +43,10 @@ class PPOTrainer:
         self.flag_1=True
         #self.flag=True#用于成功回合的单次可视化
         # Setup Tensorboard Summary Writer
-        if not os.path.exists("./summaries"):
-            os.makedirs("./summaries")
-        timestamp = time.strftime("/%Y%m%d-%H%M%S" + "/")
-        self.writer = SummaryWriter("./summaries/" + run_id + timestamp)
+        # if not os.path.exists("./summaries"):
+        #     os.makedirs("./summaries")
+        # timestamp = time.strftime("/%Y%m%d-%H%M%S" + "/")
+        # self.writer = SummaryWriter("./summaries/" + run_id + timestamp)
 
         # Init dummy environment to retrieve action space, observation space and max episode length
         print("Step 1: Init dummy environment")

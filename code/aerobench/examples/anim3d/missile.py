@@ -16,7 +16,7 @@ class missile():
     _t_max = 30
 
     def __init__(self):
-        self.m_state = np.array([5000, 5000, 5000, 50, np.deg2rad(135), 0])
+        self.m_state = np.array([np.random.uniform(4000,6000),np.random.uniform(4000,6000),np.random.uniform(4000,6000),50, np.deg2rad(135), 0])
         self._t=0
 
     def step(self, target_state, dt=0.1):

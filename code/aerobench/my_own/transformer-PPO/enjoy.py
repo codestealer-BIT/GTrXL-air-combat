@@ -67,6 +67,7 @@ def main():
     'status': [], 'times': [], 'states': [], 'modes': [],'missile':[],'final_state':[],
     'xd_list': [], 'ps_list': [], 'Nz_list': [], 'Ny_r_list': [], 'u_list': [], 'runtime': []
     }
+    sum=0
     while not done:
         # Prepare observation and memory
         obs = torch.tensor(np.expand_dims(obs, 0), dtype=torch.float32, device=device)
@@ -86,7 +87,7 @@ def main():
         obs, reward, done, info,res = env.step(action[-1],None if t==0 else m_state,t)#action是一个列表，输入应该是一个数
         m_state=res["final_state"]
         episode_rewards.append(reward)
-        t += 1
+        t += 1  
         accumulated_res['status'] = res['status']
         accumulated_res['times'].extend(res['times'])
         accumulated_res['states'].append(res['states'])
