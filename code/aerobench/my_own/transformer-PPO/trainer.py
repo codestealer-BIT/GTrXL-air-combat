@@ -74,7 +74,7 @@ class PPOTrainer:
         # Reset workers (i.e. environments)
         print("Step 5: Reset workers")
         for worker in self.workers:
-            worker.child.send(("reset", None,None,None))
+            worker.child.send(("reset",None,None))
         # Grab initial observations and store them in their respective placeholder location
         self.obs = np.zeros((self.num_workers,) + observation_space.shape, dtype=np.float32)
         for w, worker in enumerate(self.workers):
@@ -220,20 +220,17 @@ class PPOTrainer:
             # Send actions to the environments
             for w, worker in enumerate(self.workers):
                 #child负责send，终端负责recv
-                worker.child.send(("step", self.buffer.actions[w, t].cpu().numpy(),None if self.worker_current_episode_step[w]==0 else m_state[w],int(self.worker_current_episode_step[w])))#env的step函数返回的应该是一个yield
-            m_state=[]
+                worker.child.send(("step", self.buffer.actions[w, t].cpu().numpy(),int(self.worker_current_episode_step[w])))#env的step函数返回的应该是一个yield
             # Retrieve step results from the environments
             for w, worker in enumerate(self.workers):
                 obs, self.buffer.rewards[w, t], self.buffer.dones[w, t],info,res = worker.child.recv()
-                m_state.append(res['final_state'])#只是为了衔接动作
                 if info: # i.e. done
                     # Reset the worker's current timestep
-                    m_state[w]=None
                     self.worker_current_episode_step[w] = 0
                     # Store the information of the completed episode (e.g. total reward, episode length)
                     episode_infos.append(info)#这个东西的索引不能和w挂钩，它是谁先输谁放第一个
                     # Reset the agent (potential interface for providing reset parameters)
-                    worker.child.send(("reset", None,None,None))
+                    worker.child.send(("reset",None,None))
                     # Get data from reset
                     obs = worker.child.recv()
                     # Break the reference to the worker's memory
@@ -253,7 +250,7 @@ class PPOTrainer:
                 self.obs[w] = obs
         for w, _ in enumerate(self.workers):#重置step，为了m_state正确传入
             self.worker_current_episode_step[w]=0
-            worker.child.send(("reset", None,None,None))
+            worker.child.send(("reset",None,None))
             self.obs[w] = worker.child.recv()
                             
         # Compute the last value of the current observation and memory window to compute GAE
@@ -414,7 +411,7 @@ class PPOTrainer:
 
         try:
             for worker in self.workers:
-                worker.child.send(("close", None,None,None))
+                worker.child.send(("close",None,None))
         except:
             pass
 

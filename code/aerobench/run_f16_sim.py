@@ -8,7 +8,7 @@ from aerobench.util import get_state_names, Euler
 from aerobench.examples.anim3d.missile import missile
 #step一开始的m_state是None,run_f16_sim里先把missle_sim[-1](即最后一个元素)给res["final_states"],然后在test1的主循环里吧res["final_states"]
 #给m_state，然后通过env.step里面的select_simulation把m_state传给run_f16_sim
-def run_f16_sim(initial_state, tmax, ap,m_state,step=0.1, extended_states=False, model_str='morelli',
+def run_f16_sim(initial_state, tmax, ap,missile,step=0.1, extended_states=False, model_str='morelli',
                 integrator_str='rk45', v2_integrators=False, callback=None):
 
     """
@@ -84,12 +84,9 @@ def run_f16_sim(initial_state, tmax, ap,m_state,step=0.1, extended_states=False,
     # note: fixed_step argument is unused by rk45, used with euler
     integrator = integrator_class(der_func, times[-1], states[-1], tmax, **kwargs)
     missile_sim=[]
-    mis=missile()
     RT_0=np.array([states[-1][10],states[-1][9],states[-1][11]])
     target_state=np.array([*RT_0,states[-1][0],states[-1][5],states[-1][4]])
-    if m_state is not None:
-        mis.m_state=np.array(m_state).reshape(6,)
-    missile_sim.append(mis.m_state)
+    missile_sim.append(missile.m_state)
     flag=False
     while integrator.status == 'running':
         integrator.step()
@@ -102,10 +99,10 @@ def run_f16_sim(initial_state, tmax, ap,m_state,step=0.1, extended_states=False,
                 states.append(dense_output(t))
                 #print(f"{round(t, 2)} / {tmax}")
                 times.append(t)
-                mis.step(target_state)
+                missile.step(target_state)
                 target_state=np.array([states[-1][10],states[-1][9],states[-1][11],states[-1][0],states[-1][5],states[-1][4]])
-                missile_sim.append(mis.m_state)
-                distance=np.linalg.norm(target_state[0:3]-mis.m_state[0:3])
+                missile_sim.append(missile.m_state)
+                distance=np.linalg.norm(target_state[0:3]-missile.m_state[0:3])
                 if distance<50:
                     flag=True
                     #print(f"distance={distance}")

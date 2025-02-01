@@ -17,7 +17,7 @@ from aerobench.visualize import anim3d, plot
 from aerobench.examples.waypoint.waypoint_autopilot import WaypointAutopilot
 
 
-def fall_simulate(filename, state,m_state):
+def fall_simulate(state,missile):
     """simulate the system, returning waypoints, res"""
     x=state[10]
     y=state[9]
@@ -35,7 +35,7 @@ def fall_simulate(filename, state,m_state):
     ap = WaypointAutopilot(waypoints, stdout=True)
     # 环境 + agent
     extended_states = True
-    res = run_f16_sim(init, tmax, ap, m_state,extended_states=extended_states, integrator_str='rk45')
+    res = run_f16_sim(init, tmax, ap, missile,extended_states=extended_states, integrator_str='rk45')
 
     #print(f"Waypoint simulation completed in {round(res['runtime'], 2)} seconds (extended_states={extended_states})")
 

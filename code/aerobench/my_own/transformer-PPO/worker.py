@@ -19,10 +19,10 @@ def worker_process(remote: multiprocessing.connection.Connection, config:dict) -
     # Communication interface of the environment process
     while True:
         try:
-            cmd,action,m_state,step = remote.recv()
+            cmd,action,step = remote.recv()
             if cmd == "step":
                 action=int(action)
-                remote.send(env.step(action,m_state,step))
+                remote.send(env.step(action,step))
             elif cmd == "reset":
                 remote.send(env.reset())
             elif cmd == "close":

@@ -34,7 +34,6 @@ class F_16env_trxl(gym.Env):
         self.total_count=0
         assert self.total_count<episodes,"总计数不能大于回合总数"
         self.res={}
-        self.missile=[0,0,0]
         self.distance=0
         # state = [vt, alpha, beta, phi, theta, psi, P, Q, R, pn, pe, h, pow]
         self.init_state=[250,0,0,0,0,np.pi/2,0,0,0,3000,3000,3000,9]
@@ -45,6 +44,7 @@ class F_16env_trxl(gym.Env):
         self.max_count=100
         self.max_episode_steps = 200#要比回合步数大
         self.lock = multiprocessing.Lock()
+        self.missile=missile()
     @property
     def observation_space(self):
         """
@@ -67,8 +67,8 @@ class F_16env_trxl(gym.Env):
         return [seed]
     
     def calculate_reward(self,step):
-        missile=np.array(self.missile)
-        plane=np.array([self.x,self.y,self.z])
+        missile=np.array(self.missile.m_state[:3])
+        plane=np.array([self.res['states'][-1][10],self.res['states'][-1][9],self.res['states'][-1][11]])
         self.distance= np.linalg.norm(plane-missile)
         if self.distance<5000:
             r_1=-0.01*(5000-self.distance)
@@ -81,7 +81,7 @@ class F_16env_trxl(gym.Env):
 
         r_3=0
         bound=lambda x: True if 0<=x<=20000 else False
-        if not  bound(self.z):
+        if not  bound(self.res['states'][-1][11]):
             r_3=-100
         #cup=lambda x:20*(1.0/(1+np.exp(50*(x-100000)))-1.0/(1+np.exp(50*x))-1)#杯型函数
         #r_3+=cup(self.x)+cup(self.y)+cup(self.z)#边界奖励
@@ -93,23 +93,19 @@ class F_16env_trxl(gym.Env):
         done=False if step<self.max_count and self.distance>50 else True
         return done
     
-    def step(self,action,m_state,step):
+    def step(self,action,step):
         if step==0:
             self._rewards=[]
         #assert self.action_space.contains(action), "%r (%s) invalid" % (action,type(action),)
         select_simulation=simulation_functions[action]
-        if m_state is None:
-            self.res=straight_simulate(self.filename,self.init_state,m_state)
+        if step==0:
+            self.res=straight_simulate(self.init_state,self.missile)
             self.list[self.total_count].append(dict[straight_simulate.__name__])
         else:
-            self.res=select_simulation(self.filename,self.res['states'][-1][:13],m_state)
+            self.res=select_simulation(self.res['states'][-1][:13],self.missile)
             self.list[self.total_count].append(dict[select_simulation.__name__])
-        self.x,self.y,self.z=self.res['states'][-1][10],self.res['states'][-1][9],self.res['states'][-1][11]#飞机最新状态回传
-        psi,theta=self.res['states'][-1][5],self.res['states'][-1][4]
-        x_m,y_m,z_m=self.res['final_state'][:3]
-        psi_m,theta_m=self.res['final_state'][4],self.res['final_state'][5]
-        next_state=[self.x,self.y,self.z,psi,theta,x_m,y_m,z_m,psi_m,theta_m]
-        self.missile=[x_m,y_m,z_m]
+        next_state=[self.res['states'][-1][10],self.res['states'][-1][9],self.res['states'][-1][11],self.res['states'][-1][5],self.res['states'][-1][4],
+                    self.res['final_state'][0],self.res['final_state'][1],self.res['final_state'][2],self.res['final_state'][4],self.res['final_state'][5]]
         reward=self.calculate_reward(step)
         self._rewards.append(reward)
         done=self.calculate_done(step)
@@ -139,7 +135,8 @@ class F_16env_trxl(gym.Env):
     
     def reset(self):
         #[x,y,z,psi,theta,x_m,y_m,z_m,psi_m,theta_m]
-        self.m_init_state=missile().m_state#只是为了读导弹的初始信息，方便reset
-        obs=[self.init_state[10],self.init_state[9],self.init_state[11],self.init_state[5],self.init_state[4],self.m_init_state[0],self.m_init_state[1],self.m_init_state[2],self.m_init_state[4],self.m_init_state[5]]
+        self.missile.m_state= np.array([np.random.uniform(4000,6000),np.random.uniform(4000,6000),np.random.uniform(4000,6000),50, np.deg2rad(135), 0])
+        obs=[self.init_state[10],self.init_state[9],self.init_state[11],self.init_state[5],self.init_state[4],
+             self.missile.m_state[0],self.missile.m_state[1],self.missile.m_state[2],self.missile.m_state[4],self.missile.m_state[5]]
         obs=MinMaxScaler().fit_transform(np.array(obs).reshape(-1,1)).reshape(-1)
         return obs 
