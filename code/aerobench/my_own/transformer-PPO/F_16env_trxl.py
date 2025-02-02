@@ -10,6 +10,8 @@ import math
 from gym import spaces
 from gym.utils import seeding
 import multiprocessing
+import random
+import torch
 from sklearn.preprocessing import MinMaxScaler
 from aerobench.examples.anim3d.run_fall import fall_simulate
 from aerobench.examples.anim3d.run_rise import rise_simulate
@@ -35,11 +37,8 @@ class F_16env_trxl(gym.Env):
         assert self.total_count<episodes,"总计数不能大于回合总数"
         self.res={}
         self.distance=0
-        # state = [vt, alpha, beta, phi, theta, psi, P, Q, R, pn, pe, h, pow]
-        self.init_state=[250,0,0,0,0,np.pi/2,0,0,0,3000,3000,3000,9]
         self.low=np.array([0,0,0],dtype=np.float32)
         self.high=np.array([np.inf,np.inf,np.inf],dtype=np.float32)
-        self.list=[[] for _ in range(episodes)]
         self.success=0
         self.max_count=100
         self.max_episode_steps = 200#要比回合步数大
@@ -62,9 +61,10 @@ class F_16env_trxl(gym.Env):
         return spaces.Discrete(5)
 
 
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+    def seed(self):
+        np.random.seed(0)
+        random.seed(0)
+        torch.manual_seed(0)
     
     def calculate_reward(self,step):
         missile=np.array(self.missile.m_state[:3])
@@ -80,7 +80,7 @@ class F_16env_trxl(gym.Env):
         r_2 = -5000 if self.distance<=50 else 5000 if self.max_count == step else 0#结果奖励,加一个self，便于判断该step是否取得胜利
 
         r_3=0
-        bound=lambda x: True if 0<=x<=20000 else False
+        bound=lambda x: True if 1000<=x<=20000 else False
         if not  bound(self.res['states'][-1][11]):
             r_3=-100
         #cup=lambda x:20*(1.0/(1+np.exp(50*(x-100000)))-1.0/(1+np.exp(50*x))-1)#杯型函数
@@ -100,12 +100,13 @@ class F_16env_trxl(gym.Env):
         select_simulation=simulation_functions[action]
         if step==0:
             self.res=straight_simulate(self.init_state,self.missile)
-            self.list[self.total_count].append(dict[straight_simulate.__name__])
         else:
             self.res=select_simulation(self.res['states'][-1][:13],self.missile)
-            self.list[self.total_count].append(dict[select_simulation.__name__])
         next_state=[self.res['states'][-1][10],self.res['states'][-1][9],self.res['states'][-1][11],self.res['states'][-1][5],self.res['states'][-1][4],
-                    self.res['final_state'][0],self.res['final_state'][1],self.res['final_state'][2],self.res['final_state'][4],self.res['final_state'][5]]
+                    self.missile.m_state[0],self.missile.m_state[1],self.missile.m_state[2],self.missile.m_state[4],self.missile.m_state[5]]
+        # print(next_state[:3])
+        # print(next_state[5],next_state[6],next_state[7])
+        # print(self.missile.m_state[0],self.missile.m_state[1],self.missile.m_state[2])
         reward=self.calculate_reward(step)
         self._rewards.append(reward)
         done=self.calculate_done(step)
@@ -120,23 +121,20 @@ class F_16env_trxl(gym.Env):
             self._rewards=[]
         else:
             info = None
-        #self.list[self.total_count].append(str(self.distance))
         next_state=MinMaxScaler().fit_transform(np.array(next_state).reshape(-1,1)).reshape(-1)
         return next_state,reward,done,info,self.res
     
-    def tra(self,w):
-        with self.lock:
-            print(f"worker{w}:")
-            if self.success_list:
-                print('\n\n'.join([f'Trajectory{i+1}:'+str('-->'.join(self.list[index])) for i,index in enumerate(self.success_list)]))#在一个iteration结束后输出动作
-            else:
-                print("No trajectory.")
-
     
     def reset(self):
-        #[x,y,z,psi,theta,x_m,y_m,z_m,psi_m,theta_m]
-        self.missile.m_state= np.array([np.random.uniform(4000,6000),np.random.uniform(4000,6000),np.random.uniform(4000,6000),50, np.deg2rad(135), 0])
+        #[x,y,z,psi,theta,x_m,y_m,z_m,phi_m,theta_m]侧滑phi，俯仰theta，滚转psi（导弹类里定义侧滑是phi）
+        #state = [vt, alpha, beta, phi, theta, psi, P, Q, R, pn, pe, h, pow]这里的侧滑实则是psi（飞机类里定义侧滑是psi）
+        self.init_state=[250,0,0,0,0,np.pi/2,0,0,0,3000,3000,3000,9]
+        self.missile._t=0
+        self.missile._dm=0.2
+        self.missile._m=150
+        self.missile.m_state= np.array([np.random.uniform(2000,8000),np.random.uniform(2000,8000),np.random.uniform(2000,8000),50, np.deg2rad(45), 0])
+        # self.missile.m_state= np.array([0,0,0,50, np.deg2rad(0),np.deg2rad(45)])
         obs=[self.init_state[10],self.init_state[9],self.init_state[11],self.init_state[5],self.init_state[4],
              self.missile.m_state[0],self.missile.m_state[1],self.missile.m_state[2],self.missile.m_state[4],self.missile.m_state[5]]
         obs=MinMaxScaler().fit_transform(np.array(obs).reshape(-1,1)).reshape(-1)
-        return obs 
+        return obs                                                                                                                                               

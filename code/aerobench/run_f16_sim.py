@@ -84,6 +84,8 @@ def run_f16_sim(initial_state, tmax, ap,missile,step=0.1, extended_states=False,
     # note: fixed_step argument is unused by rk45, used with euler
     integrator = integrator_class(der_func, times[-1], states[-1], tmax, **kwargs)
     missile_sim=[]
+    # missile._t=0
+    # missile._m=150
     RT_0=np.array([states[-1][10],states[-1][9],states[-1][11]])
     target_state=np.array([*RT_0,states[-1][0],states[-1][5],states[-1][4]])
     missile_sim.append(missile.m_state)

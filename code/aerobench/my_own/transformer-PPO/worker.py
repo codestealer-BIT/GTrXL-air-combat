@@ -13,6 +13,7 @@ def worker_process(remote: multiprocessing.connection.Connection, config:dict) -
     # Spawn training environment
     try:
         env = create_env()
+        env.seed()
     except KeyboardInterrupt:
         pass
 
@@ -29,8 +30,6 @@ def worker_process(remote: multiprocessing.connection.Connection, config:dict) -
                 remote.send(env.close())
                 remote.close()
                 break
-            elif cmd=="tra":
-                remote.send(env.tra(action))#这里action其实是w
             else:
                 raise NotImplementedError
         except Exception as e:
