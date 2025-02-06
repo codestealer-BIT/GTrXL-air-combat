@@ -1,7 +1,8 @@
 import numpy as np
 import pickle
 import torch
-
+import random
+from plot_2d_curve import plot_2d_curve
 from docopt import docopt
 from model import ActorCriticModel
 from F_16env_trxl import F_16env_trxl
@@ -39,7 +40,9 @@ def main():
     """
     options = docopt(_USAGE)
     model_path = options["--model"]
-
+    np.random.seed(0)
+    random.seed(0)
+    torch.manual_seed(0)
     # Set inference device and default tensor type
     device = torch.device("cpu")
     torch.set_default_tensor_type("torch.FloatTensor")
@@ -49,7 +52,7 @@ def main():
 
     # Instantiate environment
     env = F_16env_trxl(episodes=50000,filename='')
-
+    env.seed()
     # Initialize model and load its parameters
     model = ActorCriticModel(config, env.observation_space, (env.action_space.n,), env.max_episode_steps)
     model.load_state_dict(state_dict)
@@ -64,7 +67,7 @@ def main():
     t = 0
     obs = env.reset()#这里只有一个worker
     accumulated_res = {
-    'status': [], 'times': [], 'states': [], 'modes': [],'missile':[],'final_state':[],
+    'status': [], 'times': [], 'states': [], 'modes': [],'missile':[],
     'xd_list': [], 'ps_list': [], 'Nz_list': [], 'Ny_r_list': [], 'u_list': [], 'runtime': []
     }
     while not done:
@@ -91,7 +94,8 @@ def main():
         accumulated_res['states'].append(res['states'])
         accumulated_res['missile'].append(res['missile'])
         accumulated_res['modes'].extend(res['modes'])
-        accumulated_res['final_state'].append(res['final_state'])
+        # if t==6:#赌一个t=1时候左转
+        #     plot_2d_curve(res["states"][:,10],res["states"][:,9])
         if 'xd_list' in res:
             accumulated_res['xd_list'].extend(res['xd_list'])
             accumulated_res['ps_list'].extend(res['ps_list'])
@@ -101,7 +105,7 @@ def main():
         accumulated_res['runtime'].append(res['runtime'])
     accumulated_res['states'] = np.vstack(accumulated_res['states'])
     accumulated_res['missile'] = np.vstack(accumulated_res['missile'])
-    anim3d.make_anim(accumulated_res, filename='', f16_scale=70, viewsize=60000, viewsize_z=4000, trail_pts=np.inf,
+    anim3d.make_anim(accumulated_res, filename='', f16_scale=70, viewsize=6000, viewsize_z=4000, trail_pts=np.inf,
                 elev=27, azim=-107, skip_frames=15,
                 chase=True, fixed_floor=False, init_extra=None)
 

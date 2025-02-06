@@ -1,6 +1,4 @@
 import math
-
-
 def rotate_point_left(dx, dy):
     """
     Rotate a point by a given angle psi.
@@ -10,7 +8,7 @@ def rotate_point_left(dx, dy):
     :param psi: Rotation angle in radians
     :return: Rotated point as a tuple (new_dx, new_dy)
     """
-    ANGLE=math.radians(30)
+    ANGLE=math.radians(45)
     new_dx = dx * math.cos(ANGLE) - dy * math.sin(ANGLE)
     new_dy = dx * math.sin(ANGLE) + dy * math.cos(ANGLE)
     return new_dx, new_dy
@@ -24,18 +22,18 @@ def rotate_point_right(dx, dy):
     :param psi: Rotation angle in radians
     :return: Rotated point as a tuple (new_dx, new_dy)
     """
-    ANGLE=math.radians(30)
+    ANGLE=math.radians(45)
     new_dx = dx * math.cos(ANGLE) + dy * math.sin(ANGLE)
     new_dy = -dx * math.sin(ANGLE) + dy * math.cos(ANGLE)
     return new_dx, new_dy
 
 def calculate_waypoints(x, y, alt, psi, direction):
-    waypoints = [[x, y, alt]]
+    waypoints = []
 
     # Define relative movements
     # movements_right = [[0, 5000], [5000, 6000]]
     # movements_left = [[0, 5000], [-5000, 6000]]
-    movements = [[500*math.sin(psi),500*math.cos(psi)]]
+    movements = [[2000*math.sin(psi),2000*math.cos(psi)]]
 
     for dx, dy in movements:
         # Rotate the movement
@@ -49,5 +47,5 @@ def calculate_waypoints(x, y, alt, psi, direction):
         y += rotated_dy
 
         waypoints.append([x, y, alt])
-
+    # print(waypoints)
     return waypoints

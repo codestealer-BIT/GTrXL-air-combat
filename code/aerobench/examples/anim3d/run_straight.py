@@ -27,17 +27,16 @@ def straight_simulate(state,missile):
     # state[6:9]=[0,0,0]
     init=state
     tmax = 30  # simulation time
-    distance=300
+    distance=2000
     x_next, y_next = calculate_next_waypoint(x, y, state[5], distance)
-    waypoints = [[x, y, alt],
+    waypoints = [
                  [x_next, y_next, alt]
                  ]
     ap = WaypointAutopilot(waypoints, stdout=True)
     # 环境 + agent
     extended_states = True
     res = run_f16_sim(init, tmax, ap,missile, extended_states=extended_states, integrator_str='rk45')
-
-   #print(f"Waypoint simulation completed in {round(res['runtime'], 2)} seconds (extended_states={extended_states})")
+    #print(f"Waypoint simulation completed in {round(res['runtime'], 2)} seconds (extended_states={extended_states})")
 
 
     return res

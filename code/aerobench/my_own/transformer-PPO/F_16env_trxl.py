@@ -68,7 +68,7 @@ class F_16env_trxl(gym.Env):
     
     def calculate_reward(self,step):
         missile=np.array(self.missile.m_state[:3])
-        plane=np.array([self.res['states'][-1][10],self.res['states'][-1][9],self.res['states'][-1][11]])
+        plane=np.array([self.res['states'][-1,10],self.res['states'][-1,9],self.res['states'][-1,11]])
         self.distance= np.linalg.norm(plane-missile)
         if self.distance<5000:
             r_1=-0.01*(5000-self.distance)
@@ -81,7 +81,7 @@ class F_16env_trxl(gym.Env):
 
         r_3=0
         bound=lambda x: True if 1000<=x<=20000 else False
-        if not  bound(self.res['states'][-1][11]):
+        if not  bound(self.res['states'][-1,11]):
             r_3=-100
         #cup=lambda x:20*(1.0/(1+np.exp(50*(x-100000)))-1.0/(1+np.exp(50*x))-1)#杯型函数
         #r_3+=cup(self.x)+cup(self.y)+cup(self.z)#边界奖励
@@ -98,11 +98,11 @@ class F_16env_trxl(gym.Env):
             self._rewards=[]
         #assert self.action_space.contains(action), "%r (%s) invalid" % (action,type(action),)
         select_simulation=simulation_functions[action]
-        if step==0:
-            self.res=straight_simulate(self.init_state,self.missile)
-        else:
-            self.res=select_simulation(self.res['states'][-1][:13],self.missile)
-        next_state=[self.res['states'][-1][10],self.res['states'][-1][9],self.res['states'][-1][11],self.res['states'][-1][5],self.res['states'][-1][4],
+        # if step==0:
+        #     self.res=straight_simulate(self.init_state,self.missile)
+        # else:
+        self.res=random.choice(simulation_functions)(self.init_state if step==0 else self.res['states'][-1,:13],self.missile)
+        next_state=[self.res['states'][-1,10],self.res['states'][-1,9],self.res['states'][-1,11],self.res['states'][-1,5],self.res['states'][-1,4],
                     self.missile.m_state[0],self.missile.m_state[1],self.missile.m_state[2],self.missile.m_state[4],self.missile.m_state[5]]
         # print(next_state[:3])
         # print(next_state[5],next_state[6],next_state[7])
@@ -130,10 +130,10 @@ class F_16env_trxl(gym.Env):
         #state = [vt, alpha, beta, phi, theta, psi, P, Q, R, pn, pe, h, pow]这里的侧滑实则是psi（飞机类里定义侧滑是psi）
         self.init_state=[250,0,0,0,0,np.pi/2,0,0,0,3000,3000,3000,9]
         self.missile._t=0
-        self.missile._dm=0.2
+        self.missile._dm=0
         self.missile._m=150
-        self.missile.m_state= np.array([np.random.uniform(2000,8000),np.random.uniform(2000,8000),np.random.uniform(2000,8000),50, np.deg2rad(45), 0])
-        # self.missile.m_state= np.array([0,0,0,50, np.deg2rad(0),np.deg2rad(45)])
+        # self.missile.m_state= np.array([np.random.uniform(2000,8000),np.random.uniform(2000,8000),np.random.uniform(2000,8000),50, np.deg2rad(45), 0])
+        self.missile.m_state= np.array([100000,100000,100000,50, np.deg2rad(0),np.deg2rad(45)])
         obs=[self.init_state[10],self.init_state[9],self.init_state[11],self.init_state[5],self.init_state[4],
              self.missile.m_state[0],self.missile.m_state[1],self.missile.m_state[2],self.missile.m_state[4],self.missile.m_state[5]]
         obs=MinMaxScaler().fit_transform(np.array(obs).reshape(-1,1)).reshape(-1)

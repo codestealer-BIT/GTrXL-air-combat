@@ -29,7 +29,7 @@ class WaypointAutopilot(Autopilot):
         self.waypoint_index = 0  # 当前的航点索引
 
         # waypoint config 航点配置
-        self.cfg_slant_range_threshold = 300  # 斜距阈值(即为现在的三维坐标和当前航点三维坐标的mse，判断是否通过该航点)
+        self.cfg_slant_range_threshold = 1500  # 斜距阈值(即为现在的三维坐标和当前航点三维坐标的mse，判断是否通过该航点)
 
         # default control when not waypoint tracking 当不进行航点跟踪时的默认控制
         self.cfg_u_ol_default = (0, 0, 0, 0.3)
@@ -217,7 +217,7 @@ class WaypointAutopilot(Autopilot):
     def is_finished(self, t, x_f16):
         """is the maneuver done? 判断任务是否完成，并根据当前飞行状态推进离散模式"""
 
-        rv = self.waypoint_index >= len(self.waypoints) and self.done_time+2.5  < t
+        rv = self.waypoint_index >= len(self.waypoints) and self.done_time+0.05  < t
 
         return rv
 

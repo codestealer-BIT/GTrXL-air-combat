@@ -129,6 +129,8 @@ def run_f16_sim(initial_state, tmax, ap,missile,step=0.1, extended_states=False,
                 if ap.is_finished(times[-1], states[-1]):
                     # this both causes the outer loop to exit and sets res['status'] appropriately
                     integrator.status = 'autopilot finished'
+                    # print(states[-1][10],states[-1][9])
+                    # print(ap.waypoints[-1][0],ap.waypoints[-1][1],'\n')
                     break
 
                 if updated:
@@ -144,7 +146,6 @@ def run_f16_sim(initial_state, tmax, ap,missile,step=0.1, extended_states=False,
     res['states'] = np.array(states, dtype=float)
     res['modes'] = modes
     res['missile']= np.array(missile_sim, dtype=float)
-    res['final_state']=missile_sim[-1]
     if extended_states:
         res['xd_list'] = xd_list
         res['ps_list'] = ps_list
