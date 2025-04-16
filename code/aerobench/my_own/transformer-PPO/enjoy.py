@@ -36,13 +36,13 @@ def main():
         enjoy.py --help
     
     Options:
-        --model=<path>              Specifies the path to the trained model [default: ./models/run.nn].
+        --model=<path>              Specifies the path to the trained model [default: ./models/run_4800_GTrXL.nn].
     """
     options = docopt(_USAGE)
     model_path = options["--model"]
-    np.random.seed(0)
-    random.seed(0)
-    torch.manual_seed(0)
+    # np.random.seed(0)
+    # random.seed(0)
+    # torch.manual_seed(0)
     # Set inference device and default tensor type
     device = torch.device("cpu")
     torch.set_default_tensor_type("torch.FloatTensor")
@@ -52,7 +52,7 @@ def main():
 
     # Instantiate environment
     env = F_16env_trxl(episodes=50000,filename='')
-    env.seed()
+    # env.seed()
     # Initialize model and load its parameters
     model = ActorCriticModel(config, env.observation_space, (env.action_space.n,), env.max_episode_steps)
     model.load_state_dict(state_dict)
@@ -80,7 +80,7 @@ def main():
         # Render environment
         # Forward model
         policy, value, new_memory = model(obs, in_memory, mask, indices)
-        memory[:, t] = new_memory
+        memory[:, t] = new_memory 
         # Sample action
         action = []
         for action_branch in policy:
@@ -105,7 +105,7 @@ def main():
         accumulated_res['runtime'].append(res['runtime'])
     accumulated_res['states'] = np.vstack(accumulated_res['states'])
     accumulated_res['missile'] = np.vstack(accumulated_res['missile'])
-    anim3d.make_anim(accumulated_res, filename='', f16_scale=70, viewsize=6000, viewsize_z=4000, trail_pts=np.inf,
+    anim3d.make_anim(accumulated_res, filename='', f16_scale=70, viewsize=60000, viewsize_z=4000, trail_pts=np.inf,
                 elev=27, azim=-107, skip_frames=15,
                 chase=True, fixed_floor=False, init_extra=None)
 

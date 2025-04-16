@@ -18,16 +18,17 @@ from aerobench.examples.anim3d.run_rise import rise_simulate
 from aerobench.examples.anim3d.run_straight import straight_simulate
 from aerobench.examples.anim3d.run_right_turn import right_turn_simulate
 from aerobench.examples.anim3d.run_left_turn import left_turn_simulate
+from aerobench.examples.anim3d.run_uturn_left import uturn_left_simulate
+from aerobench.examples.anim3d.run_uturn_right import uturn_right_simulate
 from aerobench.examples.anim3d.missile import missile
 simulation_functions = [
         fall_simulate,
         left_turn_simulate,
         right_turn_simulate,
         rise_simulate,
-        straight_simulate
+        straight_simulate,
     ]
 
-dict={"straight_simulate":"直飞",'rise_simulate':'上升','fall_simulate':'下降','left_turn_simulate':'左转','right_turn_simulate':'右转'}
 class F_16env_trxl(gym.Env):
     def __init__(self,episodes,filename):
         self.episodes=episodes
@@ -101,7 +102,7 @@ class F_16env_trxl(gym.Env):
         # if step==0:
         #     self.res=straight_simulate(self.init_state,self.missile)
         # else:
-        self.res=random.choice(simulation_functions)(self.init_state if step==0 else self.res['states'][-1,:13],self.missile)
+        self.res=select_simulation(self.init_state if step==0 else self.res['states'][-1,:13],self.missile)
         next_state=[self.res['states'][-1,10],self.res['states'][-1,9],self.res['states'][-1,11],self.res['states'][-1,5],self.res['states'][-1,4],
                     self.missile.m_state[0],self.missile.m_state[1],self.missile.m_state[2],self.missile.m_state[4],self.missile.m_state[5]]
         # print(next_state[:3])
@@ -130,10 +131,10 @@ class F_16env_trxl(gym.Env):
         #state = [vt, alpha, beta, phi, theta, psi, P, Q, R, pn, pe, h, pow]这里的侧滑实则是psi（飞机类里定义侧滑是psi）
         self.init_state=[250,0,0,0,0,np.pi/2,0,0,0,3000,3000,3000,9]
         self.missile._t=0
-        self.missile._dm=0
+        self.missile._dm=0.2
         self.missile._m=150
         # self.missile.m_state= np.array([np.random.uniform(2000,8000),np.random.uniform(2000,8000),np.random.uniform(2000,8000),50, np.deg2rad(45), 0])
-        self.missile.m_state= np.array([100000,100000,100000,50, np.deg2rad(0),np.deg2rad(45)])
+        self.missile.m_state= np.array([5000,5000,5000,50, np.deg2rad(0),np.deg2rad(45)])
         obs=[self.init_state[10],self.init_state[9],self.init_state[11],self.init_state[5],self.init_state[4],
              self.missile.m_state[0],self.missile.m_state[1],self.missile.m_state[2],self.missile.m_state[4],self.missile.m_state[5]]
         obs=MinMaxScaler().fit_transform(np.array(obs).reshape(-1,1)).reshape(-1)
