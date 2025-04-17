@@ -8,7 +8,7 @@ class missile():
 
     _g = 9.81  # gravitational acceleration
     # TODO constants
-    _Tmax = 4800  # thrust (N)最初是10000
+    _Tmax = 4900  # thrust (N)最初是10000
     _S = 0.3  # area (m2)
     _m = 150  # mass (kg)
     _dm = 4  # mass decreasing rate (kg/s)
@@ -16,7 +16,7 @@ class missile():
     _t_max = 30
 
     def __init__(self):
-        self.m_state = np.array([np.random.uniform(4000,6000),np.random.uniform(4000,6000),np.random.uniform(4000,6000),50, np.deg2rad(135), 0])
+        self.m_state = np.array([5000,5000,5000,50, np.deg2rad(135), 0])
         self._t=0
 
     def step(self, target_state, dt=0.1):

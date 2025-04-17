@@ -36,7 +36,7 @@ def main():
         enjoy.py --help
     
     Options:
-        --model=<path>              Specifies the path to the trained model [default: ./models/run_4800_GTrXL.nn].
+        --model=<path>              Specifies the path to the trained model [default: ./models/run_4900_GTrXL.nn].
     """
     options = docopt(_USAGE)
     model_path = options["--model"]
