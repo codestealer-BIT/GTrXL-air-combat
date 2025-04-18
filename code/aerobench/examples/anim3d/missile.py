@@ -8,10 +8,10 @@ class missile():
 
     _g = 9.81  # gravitational acceleration
     # TODO constants
-    _Tmax = 4900  # thrust (N)最初是10000
+    _Tmax = 4800  # thrust (N)最初是10000
     _S = 0.3  # area (m2)
     _m = 150  # mass (kg)
-    _dm = 4  # mass decreasing rate (kg/s)
+    _dm = 0.2  # mass decreasing rate (kg/s)
     _CD = 0.1
     _t_max = 30
 
